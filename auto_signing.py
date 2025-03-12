@@ -248,12 +248,18 @@ def sendSigningRequest(session: requests.Session, data):
 
 
 # sign in/out
-def signing(session, action):
+def signing(session: requests.Session, action: str):
     # 簽到退
     data = {'type': 6, 'otA': 0}
-    if str(action).lower() == 'signin':
+    if action == 'signin':
         data['t'] = 1
-    elif str(action).lower() == 'signout':
+    elif action == 'signout':
+        response = sendSigningRequest(session, {'type': 3})
+        # example response: {'d': '2025-03-12 09:25:59|'}
+        signinTime = response['d']
+        if signinTime and len(signinTime) == 19:
+            signinTime = signinTime[:-1]
+        print(f"Today's signin time: {signinTime}")
         data['t'] = 2
     else:
         raise Exception(f'SignIn/Out Error: unknow action {action}!')
