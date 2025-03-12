@@ -20,8 +20,9 @@ git clone 下載程式到本機端 / 直接從 github [下載壓縮檔](https://
 git clone https://github.com/Winedays/ntu_auto_signing.git
 ```
 
-修改 `config.ini` 檔案設定，`[TIME_DELAY]` 用於設定延遲打卡功能，當 `RandomDelay = True` 時將啟用，延遲時間每次隨機決定且上限為 `MaxDelayTime (mins)`。`[MAIL]` 用於設定 email 通知，將 `User` 及 `Password` 改為要用來發送通知的帳號密碼。`[USER]` 為 MyNTU 帳號資料，將 `UserName` 及 `Password` 改為自己的帳號密碼。
-```
+複製 `config.sample.ini` 並重新命名為 `config.ini`，然後修改 `config.ini` 檔案設定。`[TIME_DELAY]` 用於設定延遲打卡功能，當 `RandomDelay = True` 時將啟用，延遲時間每次隨機決定且上限為 `MaxDelayTime (mins)`。`[MAIL]` 用於設定 email 通知，將 `User` 及 `Password` 改為要用來發送通知的帳號密碼。`[USER]` 為 MyNTU 帳號資料，將 `UserName` 及 `Password` 改為自己的帳號密碼。
+
+```ini
 [TIME_DELAY]
 # delay time in mins
 RandomDelay = true
@@ -37,7 +38,6 @@ Password = <email 密碼>
 UserName = <myntu 帳號>
 Password = <myntu 密碼>
 ```
-
 
 透過 python 執行程式，當輸入參數為 `signin` 時會執行簽到，參數為 `signout` 時會執行簽退
 ```python

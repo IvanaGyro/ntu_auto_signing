@@ -3,4 +3,4 @@ __pycache__/
 log
 
 # private file
-user.conf
+config.ini
