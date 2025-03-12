@@ -49,12 +49,18 @@ def runTimeDelaySetting(config: configparser.ConfigParser):
     if 'TIME_DELAY' not in config:
         raise Exception('Config Error: section "TIME_DELAY" not find.')
     randomDelay = config['TIME_DELAY']['RandomDelay'].lower()
+    minDelayTime = float(config['TIME_DELAY']['MinDelayTime'])
     maxDelayTime = float(config['TIME_DELAY']['MaxDelayTime'])
+    if minDelayTime > maxDelayTime:
+        raise ValueError(
+            'Config Error: MinDelayTime must be less than MaxDelayTime.')
 
     # set delay time
     if randomDelay == 'true':
-        delay = random.random() * maxDelayTime * 60  # secs
-        time.sleep(delay)  # delay before singin/signout
+        delayMinutes = random.gauss((minDelayTime + maxDelayTime) / 2,
+                                    (maxDelayTime - minDelayTime) / 6)
+        delayMinutes = max(minDelayTime, min(delayMinutes, maxDelayTime))
+        time.sleep(delayMinutes * 60)  # delay before singin/signout
     return
 
 
@@ -86,11 +92,11 @@ def sendErrorMessageMail(checkMessage: str, messageDict: dict,
     mailDict['to'] = mailConfig['User']
     bodyText = ''
     if 'd' in messageDict:
-        bodyText += f'NTU Auto Singing got warning or error message at {messageDict['d']}\n\n'
+        bodyText += f'NTU Auto Singing got warning or error message at {messageDict["d"]}\n\n'
     else:
         bodyText += 'NTU Auto Singing got unknow request from MyNTU\n\n'
     if 'msg' in messageDict:
-        bodyText += f'System Message :{messageDict['msg']}\n\n'
+        bodyText += f'System Message :{messageDict["msg"]}\n\n'
     bodyText += f'Request Json :\n{messageDict}'
     mailDict['body'] = bodyText
 
@@ -121,7 +127,7 @@ def sendMail(mailDict: dict):
     text = msg.as_string()
     server.sendmail(msg['From'], msg['To'], text)
     server.quit()
-    print(f'Error Massage Mail Sent to {mailDict['to']}')
+    print(f'Error Massage Mail Sent to {mailDict["to"]}')
     return
 
 
@@ -129,8 +135,10 @@ def sendMail(mailDict: dict):
 def sessionInit():
     session = requests.Session()
     session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36',
-        'Connection': 'keep-alive'
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36',
+        'Connection':
+            'keep-alive'
     })
     return session
 
