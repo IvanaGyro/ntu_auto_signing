@@ -302,14 +302,18 @@ def checkSignSuccess(messageDict):
     elif messageDict['t'] == 1:
         checkDict['success'] = True
     else:  # 't' != 1
+        message = ''
         if '不需上班' in messageDict['msg']:
-            checkDict['massage'] = 'Error: Today is non-working day'
+            message = 'Error: Today is non-working day'
         elif '請先簽到' in messageDict['msg']:
-            checkDict['massage'] = 'Error: Sign out failed - No sign in record'
+            message = 'Error: Sign out failed - No sign in record'
         elif '本日至遲須於' in messageDict['msg']:
-            checkDict['massage'] = 'Error: Sign out failed - Too late to sign out'
+            message = 'Error: Sign out failed - Too late to sign out'
+        elif '不能在校外簽到退' in messageDict['msg']:
+            message = 'Error: Sign in/out failed - Cannot sign in/out outside of campus'
         else:
-            checkDict['massage'] = 'Error: Sign in/out failed'
+            message = 'Error: Sign in/out failed'
+        checkDict['massage'] = message
     return checkDict
 
 
