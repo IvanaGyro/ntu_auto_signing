@@ -20,7 +20,7 @@ git clone 下載程式到本機端 / 直接從 github [下載壓縮檔](https://
 git clone https://github.com/Winedays/ntu_auto_signing.git
 ```
 
-修改 `config.ini` 檔案設定，`[TIME_DELAY]` 用於設定延遲打卡功能，當 `RandomDelay = True` 時將啟用，延遲時間每次隨機決定且上限為 `MaxDelayTime (mins)`。`[MAIL]` 用於設定 email 通知，將 `User` 及 `Password` 改為自己的 gmail 帳號密碼。`[USER]` 為 MyNTU 帳號資料，將 `UserName` 及 `Password` 改為自己的帳號密碼。
+修改 `config.ini` 檔案設定，`[TIME_DELAY]` 用於設定延遲打卡功能，當 `RandomDelay = True` 時將啟用，延遲時間每次隨機決定且上限為 `MaxDelayTime (mins)`。`[MAIL]` 用於設定 email 通知，將 `User` 及 `Password` 改為要用來發送通知的帳號密碼。`[USER]` 為 MyNTU 帳號資料，將 `UserName` 及 `Password` 改為自己的帳號密碼。
 ```
 [TIME_DELAY]
 # delay time in mins
@@ -30,8 +30,8 @@ MaxDelayTime = 5
 [MAIL]
 Host = smtp.gmail.com
 TlsPort = 587
-User = <gmail 帳號>@gmail.com
-Password = <gmail 密碼>
+User = <email 地址>
+Password = <email 密碼>
 
 [USER]
 UserName = <myntu 帳號>
@@ -52,7 +52,31 @@ python auto_signing.py signout
 * e.g.`RandomDelay = true, MaxDelayTime = 5`，於 8 點執行程式，將隨機在 8:00~8:05 分打卡
 
 ## Email 通知功能
-Email 通知功能用於在程式打卡失敗時發送 email 進行通知，提醒使用者打卡失敗並提供相關的錯誤信息，此功能預設使用 gmail 信箱進行通知，若需要使用其他信箱，需自行更改合適的 `Host` 及 `TlsPort` 設定
+Email 通知功能用於在程式打卡失敗時發送 email 進行通知，提醒使用者打卡失敗並提供相關的錯誤信息。用 gmail 和學校信箱（不建議）通知的設定分別如下。
+
+### Gmail
+
+要使用 gmail 發送通知，必須先開啟 gmail 帳號的兩階段驗證，並且參考官方文件[「使用應用程式密碼登入帳戶」](https://support.google.com/accounts/answer/185833)申請 16 字元的應用程式密碼。設定檔中的密碼必須是透過此方法申請的應用程式密碼，不可以是原本的 gmail 密碼。
+
+```ini
+Host = smtp.gmail.com
+TlsPort = 587
+User = <gmail 帳號>@gmail.com
+Password = <gmail 應用程式密碼>
+SendWraningMail = true
+```
+
+### 學校信箱（不建議）
+
+學校信箱僅限教職員的信箱（NTU Exchange Mail），學生的信箱（NTU Webmail）無法使用。
+
+```ini
+Host = mail.ntu.edu.tw
+TlsPort = 587
+User = <myntu 帳號>@ntu.edu.tw
+Password = <myntu 密碼>
+SendWraningMail = true
+```
 
 ## 排程設定
 必須要在程式所在的目錄執行程式，否則 `config.ini` 檔的讀取會出錯  
