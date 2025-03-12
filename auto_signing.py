@@ -74,7 +74,7 @@ def sendErrorMessageMail( checkMessage: str, messageDict: dict, mailConfig: dict
     
     # send mail
     sendMail( mailDict )
-    return ;
+    return
 
 # send error massage mail
 def sendMail( mailDict: dict ) :
@@ -99,7 +99,7 @@ def sendMail( mailDict: dict ) :
     server.sendmail(msg['From'], msg['To'], text)
     server.quit()
     print( "Error Massage Mail Sent to " + mailDict['to'] )
-    return ;
+    return
 
 # set up session key, value
 def sessionInit() :
@@ -177,17 +177,25 @@ def loginMyntu( session , userInfo ) :
     session.headers.pop('Referer', None)
     return
 
+
+def sendSigningRequest(session: requests.Session, data):
+    url = "https://my.ntu.edu.tw/attend/ajax/signInR2.ashx"
+    headers = {
+        "Host": "my.ntu.edu.tw",
+        "Origin": "https://my.ntu.edu.tw",
+        "Referer": "https://my.ntu.edu.tw/attend/ssi.aspx",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest"
+    }
+    response = session.post(url, data=data, headers=headers)
+    if response.status_code != 200:
+        raise requests.exceptions.HTTPError(
+            "SignIn/Out Error: please check your network connection!")
+    messageStr = response.text
+    return json.loads(messageStr)
+
 # sign in/out
 def signing( session, action ) :
-    website = "https://my.ntu.edu.tw/attend/"
-    
-    url = "https://my.ntu.edu.tw/attend/ajax/signInR2.ashx"
-    session.headers['Host'] = 'my.ntu.edu.tw'
-    session.headers['Origin'] = 'https://my.ntu.edu.tw'
-    session.headers['Referer'] = 'https://my.ntu.edu.tw/attend/ssi.aspx'
-    session.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
-    session.headers['X-Requested-With'] = 'XMLHttpRequest'
-
     # 簽到退
     data = {'type': 6, 'otA': 0}
     if str(action).lower() == "signin" :
@@ -197,13 +205,25 @@ def signing( session, action ) :
     else :
         raise Exception("SignIn/Out Error: unknow action " + str(action) + "!")
 
-    request = session.post(url, data=data, headers = session.headers, cookies = session.cookies)
-    if request.status_code != 200 :
-        raise Exception("SignIn/Out Error: please check your network connection!")
-    messageStr = request.text
-    messageDict = json.loads( messageStr.replace("\r","").replace("\n","") )
-    messageDict = messageDict[0]
-    # requests.text example : [{'t': 1, 'msg': '簽退成功(r2)。', 'd': '2020-11-23 17:59:59', 'on': '2020-11-23 08:59:59', 'off': '2020-11-23 17:59:59', 'name': 'XXX(T0000)', 'ws': '08:00', 'we': '17:00', 'wb': '60'}]
+    response = sendSigningRequest(session, data)
+    # example response:
+    # [{
+    #     't': 1,
+    #     'msg': '簽退成功(r2)。',
+    #     'd': '2020-11-23 17:59:59',
+    #     'on': '2020-11-23 08:59:59',
+    #     'off': '2020-11-23 17:59:59',
+    #     'name': 'XXX(T0000)',
+    #     'ws': '08:00',
+    #     'we': '17:00',
+    #     'wb': '60'
+    # }]
+    messageDict = response[0]
+    if "本日至遲須於" in messageDict["msg"]:
+        # Confirm that the late sign-out is not due to work-related reasons.
+        data["otA"] = 1
+        response = sendSigningRequest(session, data)
+        messageDict = response[0]
     return messageDict
 
 # check is sign in/out success & return error massage if failed
@@ -222,7 +242,7 @@ def checkSignSuccess( messageDict ) :
             checkDict['massage'] = "Error: Sign out failed - Too late to sign out"
         else :
             checkDict['massage'] = "Error: Sign in/out failed"
-    return checkDict ;
+    return checkDict
 
 # check is singin or signout button exist on AttendPage
 def checkLoginSuccessOnAttendPage( session ) :
