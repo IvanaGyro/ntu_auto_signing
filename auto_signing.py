@@ -85,14 +85,14 @@ def sendErrorMessageMail(checkMessage: str, messageDict: dict,
     # read mail config
     mailDict['host'] = mailConfig['Host']
     mailDict['port'] = int(mailConfig['TlsPort'])
-    mailDict['user'] = mailConfig['User']
+    mailDict['user'] = mailConfig['Sender']
     mailDict['password'] = mailConfig['Password']
 
     # set mail message
     mailDict['sender'] = 'NTU Auto Singing'
     mailDict['subject'] = f'NTU Auto Singing Massage ({checkMessage})'
-    mailDict['from'] = mailConfig['User']
-    mailDict['to'] = mailConfig['User']
+    mailDict['from'] = mailConfig['Sender']
+    mailDict['to'] = mailConfig['Receiver']
     bodyText = ''
     if 'd' in messageDict:
         bodyText += f'NTU Auto Singing got warning or error message at {messageDict["d"]}\n\n'

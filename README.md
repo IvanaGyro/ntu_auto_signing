@@ -32,8 +32,10 @@ MaxDelayTime = 10
 [MAIL]
 Host = smtp.gmail.com
 TlsPort = 587
-User = <email 地址>
-Password = <email 密碼>
+Sender = <寄信者 email 地址>
+Password = <寄信者 email 密碼>
+Receiver = <收信者 email 地址>
+SendWraningMail = true
 
 [USER]
 UserName = <myntu 帳號>
@@ -75,8 +77,9 @@ Email 通知功能用於在程式打卡失敗時發送 email 進行通知，提�
 ```ini
 Host = smtp.gmail.com
 TlsPort = 587
-User = <gmail 帳號>@gmail.com
+Sender = <gmail 帳號>@gmail.com
 Password = <gmail 應用程式密碼>
+Receiver = <收信的 email 地址>
 SendWraningMail = true
 ```
 
@@ -87,8 +90,9 @@ SendWraningMail = true
 ```ini
 Host = mail.ntu.edu.tw
 TlsPort = 587
-User = <myntu 帳號>@ntu.edu.tw
+Sender = <myntu 帳號>@ntu.edu.tw
 Password = <myntu 密碼>
+Receiver = <收信的 email 地址>
 SendWraningMail = true
 ```
 
