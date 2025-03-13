@@ -1,5 +1,6 @@
 import argparse
 import configparser
+import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import json
@@ -12,6 +13,8 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+
+WORKING_HOURS = 9
 
 
 # set Argument
@@ -45,7 +48,7 @@ def loadUserInfo(config: configparser.ConfigParser):
 
 
 # load & run time delay setting from config
-def runTimeDelaySetting(config: configparser.ConfigParser):
+def getDelayMinutes(config: configparser.ConfigParser):
     if 'TIME_DELAY' not in config:
         raise Exception('Config Error: section "TIME_DELAY" not find.')
     randomDelay = config['TIME_DELAY']['RandomDelay'].lower()
@@ -60,8 +63,8 @@ def runTimeDelaySetting(config: configparser.ConfigParser):
         delayMinutes = random.gauss((minDelayTime + maxDelayTime) / 2,
                                     (maxDelayTime - minDelayTime) / 6)
         delayMinutes = max(minDelayTime, min(delayMinutes, maxDelayTime))
-        time.sleep(delayMinutes * 60)  # delay before singin/signout
-    return
+        return delayMinutes
+    return 0
 
 
 # prepare mail message & send it
@@ -256,10 +259,11 @@ def sendSigningRequest(session: requests.Session, data):
 
 
 # sign in/out
-def signing(session: requests.Session, action: str):
+def signing(session: requests.Session, action: str, delayMinutes: float):
     # 簽到退
     data = {'type': 6, 'otA': 0}
     if action == 'signin':
+        time.sleep(delayMinutes * 60)
         data['t'] = 1
     elif action == 'signout':
         response = sendSigningRequest(session, {'type': 3})
@@ -267,7 +271,22 @@ def signing(session: requests.Session, action: str):
         signinTime = response['d']
         if signinTime and len(signinTime) == 19:
             signinTime = signinTime[:-1]
-        print(f"Today's signin time: {signinTime}")
+            print(f"Today's signin time: {signinTime}")
+            signinTime = datetime.datetime.strptime(signinTime,
+                                                    r'%Y-%m-%d %H:%M:%S')
+            # If the user signs out before 9 hours after sign-in, the server
+            # will mark them as having left work too early.
+            offWorkTime = signinTime + datetime.timedelta(hours=WORKING_HOURS)
+        else:
+            print(f"Unlnown signin time: {signinTime}")
+            offWorkTime = datetime.datetime.now()
+
+        currentTime = datetime.datetime.now()
+        expectedSignoutTime = offWorkTime + datetime.timedelta(
+            minutes=delayMinutes)
+        if currentTime < expectedSignoutTime:
+            sleepSeconds = (expectedSignoutTime - currentTime).total_seconds()
+            time.sleep(sleepSeconds)
         data['t'] = 2
     else:
         raise Exception(f'SignIn/Out Error: unknow action {action}!')
@@ -358,7 +377,7 @@ if __name__ == '__main__':
     userDict = loadUserInfo(config)
 
     # run time delay setting
-    runTimeDelaySetting(config)
+    delayMinutes = getDelayMinutes(config)
 
     messageDict = None
     checkDict = None
@@ -373,7 +392,7 @@ if __name__ == '__main__':
         isLogin = checkLoginSuccessOnAttendPage(session)
         if isLogin:
             if action == 'signin' or action == 'signout':
-                messageDict = signing(session, action)
+                messageDict = signing(session, action, delayMinutes)
             else:
                 messageDict = {'t': -1, 'msg': 'Wrong Signing Action'}
             print(messageDict)
