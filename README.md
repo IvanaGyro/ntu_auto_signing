@@ -10,9 +10,9 @@
 省去人手打卡所花費的時間及避免忘記打卡所帶來的問題。  
 
 ## Requirements
-Python 3.7.9  
-requests\==2.23.0  
-beautifulsoup4\==4.8.2  
+- Python>=3.9 
+- beautifulsoup4~=4.13.3
+- requests~=2.32.3 
 
 ## Getting  started
 git clone 下載程式到本機端 / 直接從 github [下載壓縮檔](https://github.com/Winedays/ntu_auto_signing/archive/master.zip)
@@ -20,13 +20,14 @@ git clone 下載程式到本機端 / 直接從 github [下載壓縮檔](https://
 git clone https://github.com/Winedays/ntu_auto_signing.git
 ```
 
-複製 `config.sample.ini` 並重新命名為 `config.ini`，然後修改 `config.ini` 檔案設定。`[TIME_DELAY]` 用於設定延遲打卡功能，當 `RandomDelay = True` 時將啟用，延遲時間每次隨機決定且上限為 `MaxDelayTime (mins)`。`[MAIL]` 用於設定 email 通知，將 `User` 及 `Password` 改為要用來發送通知的帳號密碼。`[USER]` 為 MyNTU 帳號資料，將 `UserName` 及 `Password` 改為自己的帳號密碼。
+複製 `config.sample.ini` 並重新命名為 `config.ini`，然後修改 `config.ini` 檔案設定。`[TIME_DELAY]` 用於設定延遲打卡功能，當 `RandomDelay = True` 時將啟用，延遲時間每次依照常態分佈隨機決定，且下限為 `MinDelayTime (mins)`，上限為 `MaxDelayTime (mins)`。`[MAIL]` 用於設定 email 通知，將 `User` 及 `Password` 改為要用來發送通知的帳號密碼。`[USER]` 為 MyNTU 帳號資料，將 `UserName` 及 `Password` 改為自己的帳號密碼。
 
 ```ini
 [TIME_DELAY]
 # delay time in mins
 RandomDelay = true
-MaxDelayTime = 5
+MinDelayTime = 0
+MaxDelayTime = 10
 
 [MAIL]
 Host = smtp.gmail.com
@@ -48,8 +49,19 @@ python auto_signing.py signout
 ```
 
 ## 延遲打卡功能
-延遲打卡功能用於避免每天都在相同的時間點打卡，令程式每天的打卡時間具有隨機性，當此功能啟用時程式將在執行後隨機延遲一定的時間後才會進行打卡動作，透過設定 `MaxDelayTime` 能指定最大延遲時間 (分鐘)  
-* e.g.`RandomDelay = true, MaxDelayTime = 5`，於 8 點執行程式，將隨機在 8:00~8:05 分打卡
+延遲打卡功能用於避免每天都在相同的時間點打卡，令程式每天的打卡時間具有隨機性，當此功能啟用時，程式將在執行後依照常態分佈隨機延遲一定的時間後才會進行打卡動作，透過設定 `MinDelayTime` 和 `MaxDelayTime` 能指定最小和最大延遲時間 (分鐘)。
+
+常態分佈的平均值為最小延遲時間和最大延遲時間的平均值，常態分佈的標準差為最大延遲時間減去最小延遲時間的六分之一。
+
+例如當設定檔設定為
+
+```ini
+RandomDelay = true
+MinDelayTime = 1
+MaxDelayTime = 13
+```
+
+若於 8:00 執行程式，將有約 95.45% 的機率在 8:03~8:11 分（兩個標準差內）打卡
 
 ## Email 通知功能
 Email 通知功能用於在程式打卡失敗時發送 email 進行通知，提醒使用者打卡失敗並提供相關的錯誤信息。用 gmail 和學校信箱（不建議）通知的設定分別如下。
