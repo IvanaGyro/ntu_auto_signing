@@ -267,10 +267,11 @@ def signing(session: requests.Session, action: str, delayMinutes: float):
         data['t'] = 1
     elif action == 'signout':
         response = sendSigningRequest(session, {'type': 3})
-        # example response: {'d': '2025-03-12 09:25:59|'}
-        signinTime = response['d']
-        if signinTime and len(signinTime) == 19:
-            signinTime = signinTime[:-1]
+        # example response:
+        # {'d': '2025-03-12 09:25:59|'}
+        # {'d': '2025-03-13 08:56:41|2025-03-13 22:40:20'}
+        signinTime = response['d'].split('|')[0]
+        if signinTime:
             print(f"Today's signin time: {signinTime}")
             signinTime = datetime.datetime.strptime(signinTime,
                                                     r'%Y-%m-%d %H:%M:%S')
@@ -278,7 +279,7 @@ def signing(session: requests.Session, action: str, delayMinutes: float):
             # will mark them as having left work too early.
             offWorkTime = signinTime + datetime.timedelta(hours=WORKING_HOURS)
         else:
-            print(f"Unlnown signin time: {signinTime}")
+            print(f"Unknown sign-in/out time: {response}")
             offWorkTime = datetime.datetime.now()
 
         currentTime = datetime.datetime.now()
